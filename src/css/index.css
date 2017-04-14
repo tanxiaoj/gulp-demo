@@ -1,0 +1,11 @@
+.demo {
+  font-size: 15px;
+  color: #333;
+}
+.demo h1 {
+  color: red;
+  box-shadow: 1px 2px 4px #ccc;
+  transform: translate(-50%, -50%);
+  transiton: all 2s ;
+  background-size: cover;
+}
