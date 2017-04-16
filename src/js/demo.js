@@ -1,8 +1,8 @@
-var a = 0;
+var a = 111;
 
 afun(a);
 
-alert('ceshi')
+// alert('cesh1i')
 function afun(a){
 	console.log(a)
 }
