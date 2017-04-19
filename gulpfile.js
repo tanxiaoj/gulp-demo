@@ -21,23 +21,25 @@ var gulp = require('gulp'), //本地安装gulp所用到的地方
     revCollector = require('gulp-rev-collector'), // 路径替换
     handleErrors = require('./util/handleErrors.js'),
     base64 = require('gulp-base64');
+var fileName = "src/";  // 根目录名字
+
 //定义一个testLess任务（自定义任务名称）
 gulp.task('lessfy', function () {
-    gulp.src('src/less/*.less') //该任务针对的文件
+    gulp.src(fileName +'less/*.less') //该任务针对的文件
     // “*”：匹配所有文件    例：src/*.js(包含src下的所有js文件)；
     // “**”：匹配0个或多个子文件夹    例：src/**/*.js(包含src的0个或多个子文件夹下的js文件)；
 	// “{}”：匹配多个属性    例：src/{a,b}.js(包含a.js和b.js文件)  src/*.{jpg,png,gif}(src下的所有jpg/png/gif文件)；
 	// “!”：排除文件    例：!src/a.js(不包含src下的a.js文件)；
         .pipe(less()) //该任务调用的模块
         .on('error', handleErrors)     //交给notify处理错误
-        .pipe(gulp.dest('src/css')) //将会在src/css下生成index.css
+        .pipe(gulp.dest(fileName +'/css')) //将会在src/css下生成index.css
         .pipe(livereload());
         // .pipe(connect.reload());
 });
 
 //压缩 css
 gulp.task('minify',function(){
-    gulp.src(['src/css/*.css'])
+    gulp.src([fileName +'css/*.css'])
         .pipe(postcss([px2rem({remUnit: 125})]))  // px 转 rem  
         .pipe(postcss([ autoprefixer({ browsers: ['last 999 versions'] }) ])) // 给css添加前缀
         .pipe(base64())  // 将小图片转成base64文件
@@ -48,28 +50,33 @@ gulp.task('minify',function(){
 
 //压缩 html
 gulp.task('htmlmini', function () {
-    gulp.src('src/*.html')
-        .pipe(htmlmini())
+    gulp.src(fileName +'*.html')
+        .pipe(htmlmini({
+            removeComments: true,  //清除HTML注释
+            collapseWhitespace: true,  //压缩HTM
+            minifyJS: true,  //压缩页面JS
+            minifyCSS: true  //压缩页面CSS
+        }))
         .pipe(gulp.dest('./dist'));
 })
 
 //压缩js
 // 定义一个任务 compass
 gulp.task('compass', function () {
-    gulp.src(['src/js/*.js','!js/*.min.js'])  //获取文件，同时过滤掉.min.js文件
+    gulp.src([fileName +'js/*.js','!js/*.min.js'])  //获取文件，同时过滤掉.min.js文件
         .pipe(uglify())
         .pipe(gulp.dest('./dist/js'));  //输出文件
 });
 
 //文件合并
 gulp.task('concat', function () {
-    gulp.src('src/js/*.js')  //要合并的文件
+    gulp.src(fileName +'js/*.js')  //要合并的文件
     .pipe(concat('all.js'))  // 合并匹配到的js文件并命名为 "all.js"
     .pipe(gulp.dest('./dist/js'));
 });
 
 gulp.task('imagesmin', function () {
-    return gulp.src('src/images/*')
+    return gulp.src(fileName +'images/*')
         .pipe(imagemin({
             progressive: true,
             use: [pngquant(),imageminJpegRecompress()] //使用pngquant来压缩png图片
@@ -79,14 +86,14 @@ gulp.task('imagesmin', function () {
 
 gulp.task('watch', function() {
   	livereload.listen(); //要在这里调用listen()方法
-    gulp.watch('src/**/*.*', function(event) {  
+    gulp.watch(fileName +'**/*.*', function(event) {  
         livereload.changed(event.path);  
     });  
-    gulp.watch('src/less/*.less', ['lessfy']);  //监听目录下的文件，若文件发生变化，则调用less任务。
-  	gulp.watch('src/css/*.css', ['minify']);  
-    gulp.watch('src/**/*.html',['htmlmini']);
-    gulp.watch('src/**/*.js',['babel']);
-    gulp.watch('src/**/*.{png,jpg,gif}',['imagesmin']);
+    gulp.watch(fileName +'less/*.less', ['lessfy']);  //监听目录下的文件，若文件发生变化，则调用less任务。
+  	gulp.watch(fileName +'css/*.css', ['minify']);  
+    gulp.watch(fileName +'**/*.html',['htmlmini']);
+    gulp.watch(fileName +'**/*.js',['babel']);
+    gulp.watch(fileName +'**/*.{png,jpg,gif}',['imagesmin']);
 });
 
 gulp.task('webserver', function() {
@@ -100,7 +107,7 @@ gulp.task('webserver', function() {
 });
 
 gulp.task('babel', () =>
-    gulp.src('src/js/*.js')
+    gulp.src(fileName +'js/*.js')
         .pipe(babel({
             presets: ['env']
         }))
@@ -115,7 +122,7 @@ gulp.task('babel', () =>
 // map css
 gulp.task('css', function () {
 
-    return gulp.src('src/**/*.css')
+    return gulp.src(fileName +'**/*.css')
         .pipe( sourcemaps.init() )
         .pipe( postcss([ require('precss'), require('autoprefixer') ]) )
         .pipe( sourcemaps.write('.') )
@@ -125,7 +132,7 @@ gulp.task('css', function () {
 //css 自动添加前缀
 gulp.task('autoprefixer', function () {
 
-  return gulp.src('src/**/*.css')
+  return gulp.src(fileName +'**/*.css')
     .pipe(postcss([ autoprefixer({ browsers: ['last 999 versions'] }) ]))
     .pipe(gulp.dest('./dist'));
 });
@@ -138,7 +145,7 @@ gulp.task('delconsole', function () {
 });
 
 gulp.task('rev', function() {
-    gulp.src('src/**/*.css')   
+    gulp.src(fileName +'**/*.css')   
         .pipe(revCollector())              //- 执行文件内css名的替换
         .pipe(gulp.dest('./dist'));       //- 替换后的文件输出的目录
 });
@@ -176,6 +183,8 @@ gulp.task('help',function () {
 
 });
 
-gulp.task('default',['webserver','lessfy','minify','htmlmini','babel','imagesmin','watch']);
+// gulp.task('default',['webserver','lessfy','minify','htmlmini','babel','imagesmin','watch']);
+// 
+gulp.task('default',['webserver','minify','htmlmini','babel','imagesmin','watch']);
 
 gulp.task('delTip',['delconsole']);  // 清除代码中的console,alert,debugger
